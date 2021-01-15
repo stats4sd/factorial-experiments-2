@@ -53,7 +53,7 @@ ui <- fluidPage(
                                                                "Custom"="custom")),
             conditionalPanel(
                 condition = "input.order == 'custom'",
-            custom_order <- rank_list(
+            custom_sort <- rank_list(
                 text = "Drag the items in desired x axis order",
                 labels = labels,
                 input_id = "custom_sort"
@@ -63,12 +63,14 @@ ui <- fluidPage(
         
         
         mainPanel(
+            tableOutput("dataset"),
             plotOutput("Plot1")
         )
     )
 )
 
 server <- function(input, output, session) {
+    
     
     output$Plot1 <- renderPlot({
         
@@ -81,7 +83,7 @@ server <- function(input, output, session) {
             data1$x<-reorder(data1$x,-1*data1$yield,mean)
         }
         if(input$order == "custom"){
-            data1$x <- fct_relevel(data1$x, input$custom_order)
+            data1$x <- fct_relevel(data1$x, input$custom_sort)
         }
         
         ggplot(data=data1,aes_string(x="x",colour=input$colour,group=input$colour,y=input$outcome))+

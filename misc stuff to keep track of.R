@@ -25,3 +25,6 @@ observe({
   updateSelectInput(session,"facet",choices=classes$col[classes$class == "factor" | classes$class =="character"])
 })
 
+classes1 <- data.frame(
+  col = colnames(data1),
+  class = 
