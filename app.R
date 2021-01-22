@@ -44,7 +44,7 @@ ui <- fluidPage(
                         "Select Outcome Variable",choices = classes$col[classes$class == "numeric"|classes$class == "integer"]
             ),
             selectInput("x","Select x-axis variable",choices= classes$col[(classes$class == "factor" | classes$class =="character") & classes$col != "none"]),
-            selectInput("colour","Select colour variable",classes$col[classes$class == "factor" | classes$class =="character"]),
+            selectInput("colour","Select colour variable",classes$col[classes$class == "factor" | classes$class =="character" & classes$col != input$x]),
             selectInput("facet","Select facet variable",choices=classes$col[classes$class == "factor" | classes$class =="character"]),
             
             selectInput("order","Arrange x-axis by:",choices=c("Data Order"="data",
@@ -70,7 +70,6 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-    
     
     output$Plot1 <- renderPlot({
         
