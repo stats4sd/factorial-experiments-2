@@ -145,8 +145,8 @@ server<-function(input, output,session){
         }else if(input$facet == "none"){
             
             ggplot(data=data,aes_string(x=input$x,colour=input$colour,group=input$colour,y=input$outcome))+
-                stat_summary(geom="line", width = 1, show.legend = FALSE)+
-                stat_summary(geom="point", size = 3, show.legend = FALSE)+
+                stat_summary(geom="line", width = 1)+
+                stat_summary(geom="point", size = 3)+
                 theme(axis.title = element_text(size = 15),
                       axis.text = element_text(size = 12),
                       strip.text = element_text(size = 15),
