@@ -124,31 +124,68 @@ server<-function(input, output,session){
             data[,input$x] <- fct_relevel(data[,input$x],input$custom_sort)
         }
         
-        if(input$colour == "none" & input$facet == "none"){
+        if((input$colour == input$facet | input$x == input$colour | input$x == input$facet) & 
+           (input$colour != "none"  | input$facet != "none")){
+            ggplot()
+            
+        }else if(input$colour == "none" & input$facet == "none"){
             
             ggplot(data=data,aes_string(x=input$x,y=input$outcome, colour = input$colour,group=input$colour))+
-                stat_summary(geom="line", show.legend = FALSE)+
-                stat_summary(geom="point", show.legend = FALSE)
+                stat_summary(geom="line", width = 1, show.legend = FALSE)+
+                stat_summary(geom="point", size = 3, show.legend = FALSE)+
+                theme(axis.title = element_text(size = 15),
+                      axis.text = element_text(size = 12),
+                      strip.text = element_text(size = 15),
+                      panel.background = element_rect(fill = "gray100", colour = "gray100"),
+                      panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
+                      panel.grid.minor = element_line(colour = "gray100"),
+                      strip.background = element_rect(fill = "white",
+                                                      colour = "darksalmon"))
             
         }else if(input$facet == "none"){
             
             ggplot(data=data,aes_string(x=input$x,colour=input$colour,group=input$colour,y=input$outcome))+
-                stat_summary(geom="line")+
-                stat_summary(geom="point")
+                stat_summary(geom="line", width = 1, show.legend = FALSE)+
+                stat_summary(geom="point", size = 3, show.legend = FALSE)+
+                theme(axis.title = element_text(size = 15),
+                      axis.text = element_text(size = 12),
+                      strip.text = element_text(size = 15),
+                      panel.background = element_rect(fill = "gray100", colour = "gray100"),
+                      panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
+                      panel.grid.minor = element_line(colour = "gray100"),
+                      strip.background = element_rect(fill = "white",
+                                                      colour = "darksalmon"))
             
         }else if(input$colour == "none"){
             
             ggplot(data=data,aes_string(x=input$x,y=input$outcome, colour = input$colour,group=input$colour))+
-                stat_summary(geom="line",show.legend = FALSE)+
-                stat_summary(geom="point", show.legend = FALSE)+
-                facet_wrap(input$facet)
+                stat_summary(geom="line", width = 1, show.legend = FALSE)+
+                stat_summary(geom="point", size = 3, show.legend = FALSE)+
+                facet_wrap(input$facet)+
+                theme(axis.title = element_text(size = 15),
+                      axis.text = element_text(size = 12),
+                      strip.text = element_text(size = 15),
+                      panel.background = element_rect(fill = "gray100", colour = "gray100"),
+                      panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
+                      panel.grid.minor = element_line(colour = "gray100"),
+                      strip.background = element_rect(fill = "white",
+                                                      colour = "darksalmon"))
             
         }else{
             
             ggplot(data=data,aes_string(x=input$x,colour=input$colour,group=input$colour,y=input$outcome))+
-                stat_summary(geom="line")+
-                stat_summary(geom="point")+
-                facet_wrap(input$facet)
+                stat_summary(geom="line", width = 1)+
+                stat_summary(geom="point", size = 3)+
+                facet_wrap(input$facet)+
+                theme(axis.title = element_text(size = 15),
+                      axis.text = element_text(size = 12),
+                      strip.text = element_text(size = 15),
+                      panel.background = element_rect(fill = "gray100", colour = "gray100"),
+                      panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
+                      panel.grid.minor = element_line(colour = "gray100"),
+                      strip.background = element_rect(fill = "white",
+                                                      colour = "darksalmon")
+                )
         }
     })
     
