@@ -2,50 +2,31 @@ library(shiny)
 library(agridat)
 library(tidyverse)
 library(sortable)
+library(DT)
+library(shinyjqui)
+
 
 data1<-cox.stripsplit
-data2<-cox.stripsplit
+data2<-read.csv("factorial_data.csv")
 
-colnames(data2) <- c("rep", "seed", "pesticide", "nitrogen", "length")
+data2$Farmer <- as.factor(data2$Farmer)
+data2$Inputs <- as.factor(data2$Inputs)
 
 datasets <- list(
     `Study 1` = data1,
     `Study 2` = data2
 )
 
-classes <- NULL
-
-for(i in 1:ncol(data1)){
-    
-    classes$col[i] <- colnames(data1)[i]
-    classes$class[i] <- class(data1[,i]) 
-}
-
-classes <- data.frame(classes)%>%
-    arrange(col)%>%
-    add_row(col = "none", class = "character")
-
-data1$none<-"1"
-
-data1$x<-data1$soil
-
-labels <- levels(data1$calcium)
-
 ui <- fluidPage(
-    
-    
     titlePanel("Factorial Experiments Presentation"),
-    
-    
     sidebarLayout(
         sidebarPanel(
             selectInput("dataset", "Select Dataset", choices = names(datasets)),
             selectInput("outcome",
-                        "Select Outcome Variable",choices = classes$col[classes$class == "numeric"|classes$class == "integer"]
-            ),
-            selectInput("x","Select x-axis variable",choices= classes$col[(classes$class == "factor" | classes$class =="character") & classes$col != "none"]),
-            selectInput("colour","Select colour variable",classes$col[classes$class == "factor" | classes$class =="character" & classes$col != input$x]),
-            selectInput("facet","Select facet variable",choices=classes$col[classes$class == "factor" | classes$class =="character"]),
+                        "Select Outcome Variable", choices = colnames(datasets[[1]])[sapply(datasets[[1]],class)%in%c("numeric","integer")]),
+            selectInput("x","Select x-axis variable",choices= colnames(datasets[[1]])[!sapply(datasets[[1]],class)%in%c("numeric","integer")]),
+            selectInput("colour","Select colour variable", choices = colnames(datasets[[1]])[!sapply(datasets[[1]],class)%in%c("numeric","integer")]),
+            selectInput("facet","Select facet variable", colnames(datasets[[1]])[!sapply(datasets[[1]],class)%in%c("numeric","integer")]),
             
             selectInput("order","Arrange x-axis by:",choices=c("Data Order"="data",
                                                                "Increasing y"="increase",
@@ -53,45 +34,124 @@ ui <- fluidPage(
                                                                "Custom"="custom")),
             conditionalPanel(
                 condition = "input.order == 'custom'",
-            custom_sort <- rank_list(
-                text = "Drag the items in desired x axis order",
-                labels = labels,
-                input_id = "custom_sort"
-            )
-        )
+                custom_sort <- orderInput(
+                    label  = "Drag the items in desired x axis order",
+                    items = NULL,
+                    inputId = "custom_sort"))
         ),
-        
-        
-        mainPanel(
-            tableOutput("dataset"),
-            plotOutput("Plot1")
+        mainPanel(span(htmlOutput("error_message"),style = "color:red"),
+                  plotOutput("plot")
         )
     )
 )
 
-server <- function(input, output, session) {
+
+
+
+server<-function(input, output,session){
     
-    output$Plot1 <- renderPlot({
+    data <- reactive({
+        data <- datasets[input$dataset][[1]]
         
-        data1$x<-data1[,input$x]
+        data$none <- "1"
+        
+        return(data)
+        
+    })
+    
+    classes <- reactive({
+        data <- data()
+        
+        classes <- NULL
+        
+        for(i in 1:ncol(data)){
+            classes$col[i] <- colnames(data)[i]
+            classes$class[i] <- class(data[,i]) 
+        }
+        
+        classes <- data.frame(classes)%>%
+            arrange(col)
+        
+        return(classes)
+    })
+    
+    
+    choices <- reactiveValues(outcome_choices = NULL,
+                              colour_choices = NULL,
+                              facet_choices = NULL,
+                              x_choices = NULL,
+                              rank_choices = NULL)
+    
+    observeEvent(input$dataset,{
+        
+        updateSelectInput(session = session, inputId = "outcome",choices = colnames(data())[sapply(data(),class)%in%c("numeric","integer")])
+        updateSelectInput(session = session, inputId = "x",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")])
+        updateSelectInput(session = session, inputId = "colour",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")])
+        updateSelectInput(session = session, inputId = "facet",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")])
+        
+    })
+    
+    
+    observeEvent(input$x,{
+        if(input$x!="none"){
+            d1<-data()
+            d1[,input$x] <- as.character(d1[,input$x])
+            choices<-unique(d1[,input$x])
+            updateOrderInput(session = session, inputId = "custom_sort",items = choices)
+        }
+        
+    })
+    
+    output$error_message <- renderText({
+        if((input$colour == input$facet | input$x == input$colour | input$x == input$facet) & (input$colour != "none"  | input$facet != "none")){ #Having some trouble 
+            HTML("<b>Please do not choose the same variable for more than one option</b>")
+        }
+    })
+    
+    
+    
+    output$plot <- renderPlot({
+        
+        data <- data()
         
         if(input$order=="increase"){
-            data1$x<-reorder(data1$x,data1$yield,mean)
+            data[,input$x] <- reorder(data[,input$x], data[,input$outcome])
         }
         if(input$order=="decrease"){
-            data1$x<-reorder(data1$x,-1*data1$yield,mean)
+            data[,input$x] <- reorder(data[,input$x], -1*data[,input$outcome])
         }
         if(input$order == "custom"){
-            data1$x <- fct_relevel(data1$x, input$custom_sort)
+            data[,input$x] <- fct_relevel(data[,input$x],input$custom_sort)
         }
         
-        ggplot(data=data1,aes_string(x="x",colour=input$colour,group=input$colour,y=input$outcome))+
-            stat_summary(geom="line")+
-            stat_summary(geom="point")+
-            facet_wrap(input$facet)+
-            theme_classic()
+        if(input$colour == "none" & input$facet == "none"){
+            
+            ggplot(data=data,aes_string(x=input$x,y=input$outcome, colour = input$colour,group=input$colour))+
+                stat_summary(geom="line", show.legend = FALSE)+
+                stat_summary(geom="point", show.legend = FALSE)
+            
+        }else if(input$facet == "none"){
+            
+            ggplot(data=data,aes_string(x=input$x,colour=input$colour,group=input$colour,y=input$outcome))+
+                stat_summary(geom="line")+
+                stat_summary(geom="point")
+            
+        }else if(input$colour == "none"){
+            
+            ggplot(data=data,aes_string(x=input$x,y=input$outcome, colour = input$colour,group=input$colour))+
+                stat_summary(geom="line",show.legend = FALSE)+
+                stat_summary(geom="point", show.legend = FALSE)+
+                facet_wrap(input$facet)
+            
+        }else{
+            
+            ggplot(data=data,aes_string(x=input$x,colour=input$colour,group=input$colour,y=input$outcome))+
+                stat_summary(geom="line")+
+                stat_summary(geom="point")+
+                facet_wrap(input$facet)
+        }
     })
+    
 }
 
-# Run the application 
 shinyApp(ui = ui, server = server)

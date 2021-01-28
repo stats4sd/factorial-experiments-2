@@ -21,7 +21,8 @@ ui <- shinyUI(
     tabPanel("Dataset",
       sidebarLayout(
       sidebarPanel(
-        selectInput("dataset", "Select Dataset", choices = names(datasets))
+        selectInput("dataset", "Select Dataset", choices = names(datasets)),
+        actionButton("update", "Update")
       ),
       mainPanel(
         DT::dataTableOutput("datatable"),
@@ -35,6 +36,7 @@ ui <- shinyUI(
     )
 
 server<-shinyServer(function(input, output,session){
+  
 
   data <- reactive({
     data <- data.frame(datasets[input$dataset])
@@ -71,6 +73,35 @@ server<-shinyServer(function(input, output,session){
     classes()
   })
   
+  choices <- reactiveValues(outcome_choices = NULL,
+                            colour_choices = NULL,
+                            facet_choices = NULL,
+                            x_choices = NULL,
+                            rank_choices = NULL)
+  
+  observeEvent(input$update,{
+    
+    choices$outcome_choices <-
+    subset(classes(),class == "numeric"|class == "integer")$col
+  
+  
+  choices$colour_choices <- 
+    subset(classes(),class == "factor"|class == "character")$col
+
+  
+  choices$facet_choices <- 
+    subset(classes(),class == "factor"|class == "character")$col
+
+  choices$x_choices <-
+    subset(classes(),class == "factor"|class == "character")$col
+  
+  })
+  
+  observeEvent(input$x, {
+    choices$rank_choices <-
+      as.character(unique(subset(data(),select = input$x)))
+  })
+ 
   output$app = renderUI(
     fluidPage(
       
@@ -81,10 +112,10 @@ server<-shinyServer(function(input, output,session){
       sidebarLayout(
         sidebarPanel(
           selectInput("outcome",
-                      "Select Outcome Variable",choices = c(1,2)),
-          selectInput("x","Select x-axis variable",choices= c(1,2)),
-          selectInput("colour","Select colour variable", choices = c(1,2)),
-          selectInput("facet","Select facet variable", choices = c(1,2)),
+                      "Select Outcome Variable", choices = choices$outcome_choices),
+          selectInput("x","Select x-axis variable",choices= choices$x_choices),
+          selectInput("colour","Select colour variable", choices = choices$colour_choices),
+          selectInput("facet","Select facet variable", choices = choices$facet_choices),
           
           selectInput("order","Arrange x-axis by:",choices=c("Data Order"="data",
                                                              "Increasing y"="increase",
@@ -96,7 +127,7 @@ server<-shinyServer(function(input, output,session){
             condition = "input.order == 'custom'",
             custom_sort <- rank_list(
               text = "Drag the items in desired x axis order",
-              labels = c(1,2),
+              labels = choices$rank_choices,
               input_id = "custom_sort")),
           plotOutput("plot")
         )
