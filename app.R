@@ -9,12 +9,37 @@ library(shinyjqui)
 data1<-cox.stripsplit
 data2<-read.csv("factorial_data.csv")
 
+data2_description <- data.frame(
+    Variable = colnames(data2),
+    Description = c("Type, 3 levels (A, B, C)",
+                    "Inputs, 3 levels (0, 100, 200)",
+                    "Farmer, 20 levels (1 - 20)",
+                    "Gender, 2 levels, (Female, Male)",
+                    "Site, 3 levels (X, Y, Z)",
+                    "Random Effect, numeric",
+                    "Yield, numeric")
+)
+
+data1_description <- data.frame(
+    Variable = colnames(data1),
+    Description = c("Replicate, 4 levels",
+                    "Soil, 3 levels",
+                    "Fertiliser, 4 levels",
+                    "Calcium, 2 levels",
+                    "yield of winter barley")
+)
+
 data2$Farmer <- as.factor(data2$Farmer)
 data2$Inputs <- as.factor(data2$Inputs)
 
 datasets <- list(
     `Study 1` = data1,
     `Study 2` = data2
+)
+
+dataset_descriptions <- list(
+    `Study 1` = data1_description,
+    `Study 2` = data2_description
 )
 
 ui <- fluidPage(
@@ -40,6 +65,7 @@ ui <- fluidPage(
                     inputId = "custom_sort"))
         ),
         mainPanel(span(htmlOutput("error_message"),style = "color:red"),
+                  dataTableOutput("data_descrip"),
                   plotOutput("plot")
         )
     )
@@ -57,6 +83,12 @@ server<-function(input, output,session){
         
         return(data)
         
+    })
+    
+    output$data_descrip <- renderDataTable({
+        data_des <- dataset_descriptions[input$dataset][[1]]
+        
+        return(data_des)
     })
     
     classes <- reactive({
