@@ -4,7 +4,10 @@ library(tidyverse)
 library(DT)
 library(shinyjqui)
 library(shinyjs)
+library(shinydashboard)
+library(shinyAce)
 
+init = "data"
 
 data1<-cox.stripsplit
 data2<-read.csv("factorial_data.csv")
@@ -75,6 +78,16 @@ ui <- fluidPage(
                       verbatimTextOutput("data_descrip")
                       )
                       ),
+                  actionButton("show_code", "See plotting code"),
+                  hidden(
+                      div(id = "code_div",
+                          aceEditor(outputId = "ace",
+                                    selectionId = "selection",
+                                    value = init,
+                                    fontSize = 12,
+                                    height = "75px")
+                          )
+                      ),
                   plotOutput("plot",height = "600px")
         )
     )
@@ -94,7 +107,8 @@ server<-function(input, output,session){
         
     })
     
-    observeEvent(input$show_des, {
+    
+   observeEvent(input$show_des, {
         
         toggle(id = "des_div")
         
@@ -102,9 +116,45 @@ server<-function(input, output,session){
             str(data())
         })
     })
-    
    
-    
+   observeEvent(input$show_code, {
+       
+       toggle("code_div")}
+   )   
+   
+   observeEvent(c(input$dataset, input$facet, input$x, input$outcome, input$colour),
+                  {
+       if(input$colour == "none" & input$facet == "none"){
+           
+           code <- paste0("ggplot(data=`", input$dataset,"`, aes_string(x=", input$x ,", y= ", input$outcome, ", colour = "
+           , input$colour, ", group = ", input$colour, "))+
+            stat_summary(geom='line', width = 1, show.legend = FALSE)+
+            stat_summary(geom='point', size = 3, show.legend = FALSE))")
+       }else if(input$facet == "none"){
+           code <- paste0("ggplot(data=`", input$dataset,"`, aes_string(x=", input$x ,", y= ", input$outcome, ", colour = "
+                         , input$colour, ", group = ", input$colour, "))+
+            stat_summary(geom='line', width = 1)+
+            stat_summary(geom='point', size = 3)")
+       }else if (input$colour == "none"){
+           code <- paste0("ggplot(data=`", input$dataset,"`, aes_string(x=", input$x ,", y= ", input$outcome, ", colour = "
+                         , input$colour, ", group = ", input$colour, "))+
+            stat_summary(geom='line', width = 1, show.legend = FALSE)+
+            stat_summary(geom='point', size = 3, show.legend = FALSE)+
+            facet_wrap(~", input$facet, ")")
+       }else{
+           code <- paste0("ggplot(data=`", input$dataset,"`, aes_string(x=", input$x ,", y= ", input$outcome, ", colour = "
+                         , input$colour, ", group = ", input$colour, "))+
+            stat_summary(geom='line', width = 1)+
+            stat_summary(geom='point', size = 3)+
+            facet_wrap(~", input$facet, ")")
+       }
+       
+       updateAceEditor(session, editorId = "ace", value = code)
+       
+       
+   })
+   
+ 
     classes <- reactive({
         data <- data()
         
