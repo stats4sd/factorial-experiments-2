@@ -19,8 +19,9 @@ data4[81,4] <- 300
 
 data2$Farmer <- as.factor(data2$Farmer)
 data2$Inputs <- as.factor(data2$Inputs)
+data2 <- select(data2, - ranef)
 
-datasets <- list(
+Oudatasets <- list(
     `Study 1: Barley yield` = data1,
     `Study 2: Example data (yield)` = data2,
     `Study 3: Seed germination` = data3,
@@ -71,7 +72,12 @@ ui <- fluidPage(
                     items = NULL,
                     inputId = "custom_sort"))
         ),
-        mainPanel(span(htmlOutput("error_message"),style = "color:red"),
+        mainPanel(
+            tabsetPanel(
+                tabPanel("Instructions",
+                htmlOutput("instructions")),
+                tabPanel("App",
+                    span(htmlOutput("error_message"),style = "color:red"),
                   actionButton("show_des", "See data description"),
                   hidden(
                       div(id = "des_div",
@@ -89,14 +95,66 @@ ui <- fluidPage(
                           )
                       ),
                   plotOutput("plot",height = "600px")
+                )
         )
     )
 )
-
-
-
+)
 
 server<-function(input, output,session){
+    
+    
+    output$instructions <- renderText({
+        HTML("<head>
+                 <title>Instructions</title>
+                 </head>
+                 <body>
+                 
+                 <h1>Instructions</h1>
+                 
+                 <p>This app is designed to help you explore how you can visualise data from factorial experiments. You will be able to choose an example dataset and then use the drop down lists to select which variables you would like to plot onto the graph which will appear on the page.</p>
+                 
+                 <p>To show the graph, please click onto the 'App' button above.</p>
+                 
+                 <h2>Data</h2>
+                 
+                 <p>This app has been loaded with 5 example datasets</p>
+                 
+                 <p>Study 1: Barely yield - A study looking at yields of barley by different levels of replication, soil type, fertiliser and calcium levels.</p>
+                 <p>Study 2: Barely yield - A  simulated study looking at yields by different levels of inputs, famers, farmer gender and sites.</p>
+                 <p>Study 3: Seed germination - A study looking at germination of Orobanche seeds by different levels of replication, genotype, and extract (bean or cucumber).</p>
+                 <p>Study 4: Cow bodyweight - A study looking at weught if cows by different levels of iron and infection.</p>
+                 <p>Study 5: Rice - A study (split-plot) looking at heights of riceplants by different levels of time, management, and rep/block.</p>
+                 
+                 <h2>How to create your plot</h2>
+                 
+                 <p></p>You can use the dropdown menus along the side to build your plot.</p>
+                 
+                 <ul>
+                 <li>Dataset - select from one of 5 datasets</li>
+                 <li>Outcome - This will be a numerical variable that has been measured such as yield. This will be plotted on the y axis</li>
+                 <li>X - A categorical vaiable that will be plotted on the x axis</li>
+                 <li>Colour - A categorical variable to be used to split the data with each level being a different colour</li>
+                 <li>Facet - A categorical variable which will split the data into different subsets that will be plotted on smaller individual plots.</li>
+                 <li>Order - Used to order the x axis</li>
+                 <ul>
+                 <li>Data order - The order that the data appears in R. Either alphabetical or by pre-defined order of factors</li>
+                 <li>Increasing y - x axis ordered by increasing value of the outcome variable</li>
+                 <li>Decreasing y - x axis ordered by descreasing value of the outcome variable</li>
+                 <li>Custom - A custom order that you can define.</li>
+                 </ul>
+                 </ul>
+                 
+                 <p>You can also see the data structure by clicking on the 'See data description' button.</p>
+                 
+                 <p>You can see the basic R code by clicking on the 'See plotting code' button.</p>
+                 
+                 <p>You can select 'none'; for colour or facet to not make use of these options.</p>
+                 
+                 <p>Please do NOT choose the same variable for more than one option except for 'none'.</p>
+                 
+                 </body>")
+    })
     
     data <- reactive({
         data <- datasets[input$dataset][[1]]
