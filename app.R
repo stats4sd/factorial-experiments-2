@@ -35,9 +35,19 @@ ui <- fluidPage(
 
         body, label, input, button, select { 
           font-family: "Arial";
-        }')
+        }
+        
+        body, label, input, button, select { 
+          font-size: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 0 !important;
+        }
+          
+        ')
     )),
-    titlePanel("Factorial Experiments Presentation"),
+    titlePanel("Exploring Presentation of Factorial Experiments"),
     sidebarLayout(position = "right",
         sidebarPanel(id = "sidebar",
             selectInput("dataset", "Select Dataset", choices = names(datasets)),
@@ -65,7 +75,7 @@ ui <- fluidPage(
                       verbatimTextOutput("data_descrip")
                       )
                       ),
-                  plotOutput("plot",height = "800px")
+                  plotOutput("plot",height = "600px")
         )
     )
 )
