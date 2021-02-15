@@ -674,13 +674,6 @@
       "Repository": "CRAN",
       "Hash": "402073a8a045c9f5ea096ed94e01d9ce"
     },
-    "shinydashboard": {
-      "Package": "shinydashboard",
-      "Version": "0.7.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "133639dc106955eee4ffb8ec73edac37"
-    },
     "shinyjqui": {
       "Package": "shinyjqui",
       "Version": "0.3.3.9000",

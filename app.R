@@ -4,7 +4,6 @@ library(tidyverse)
 library(DT)
 library(shinyjqui)
 library(shinyjs)
-library(shinydashboard)
 library(shinyAce)
 
 init = "data"
@@ -103,9 +102,8 @@ ui <- fluidPage(
 
 server<-function(input, output,session){
     
-    
     output$instructions <- renderText({
-        HTML("<head>
+        shiny::HTML("<head>
                  <title>Instructions</title>
                  </head>
                  <body>
