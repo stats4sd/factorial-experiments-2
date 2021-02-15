@@ -3,6 +3,7 @@ library(agridat)
 library(tidyverse)
 library(DT)
 library(shinyjqui)
+library(shinyjs)
 
 
 data1<-cox.stripsplit
@@ -10,6 +11,8 @@ data2<-read.csv("factorial_data.csv")
 data3<-crowder.seeds
 data4<-diggle.cow
 data5<-gomez.splitplot.subsample
+
+data4[81,4] <- 300
 
 data2$Farmer <- as.factor(data2$Farmer)
 data2$Inputs <- as.factor(data2$Inputs)
@@ -23,9 +26,20 @@ datasets <- list(
 )
 
 ui <- fluidPage(
+    useShinyjs(),
+    tags$head(tags$style(
+        HTML('
+         #sidebar {
+            background-color: #A9D8E4;
+        }
+
+        body, label, input, button, select { 
+          font-family: "Arial";
+        }')
+    )),
     titlePanel("Factorial Experiments Presentation"),
-    sidebarLayout(
-        sidebarPanel(
+    sidebarLayout(position = "right",
+        sidebarPanel(id = "sidebar",
             selectInput("dataset", "Select Dataset", choices = names(datasets)),
             selectInput("outcome",
                         "Select Outcome Variable", choices = colnames(datasets[[1]])[sapply(datasets[[1]],class)%in%c("numeric","integer")]),
@@ -45,8 +59,13 @@ ui <- fluidPage(
                     inputId = "custom_sort"))
         ),
         mainPanel(span(htmlOutput("error_message"),style = "color:red"),
-                  verbatimTextOutput("data_descrip"),
-                  plotOutput("plot")
+                  actionButton("show_des", "See data description"),
+                  hidden(
+                      div(id = "des_div",
+                      verbatimTextOutput("data_descrip")
+                      )
+                      ),
+                  plotOutput("plot",height = "800px")
         )
     )
 )
@@ -65,9 +84,16 @@ server<-function(input, output,session){
         
     })
     
-    output$data_descrip <- renderPrint({
-        str(data())
+    observeEvent(input$show_des, {
+        
+        toggle(id = "des_div")
+        
+        output$data_descrip <- renderPrint({
+            str(data())
+        })
     })
+    
+   
     
     classes <- reactive({
         data <- data()
@@ -96,11 +122,12 @@ server<-function(input, output,session){
         
         updateSelectInput(session = session, inputId = "outcome",choices = colnames(data())[sapply(data(),class)%in%c("numeric","integer")])
         updateSelectInput(session = session, inputId = "x",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")])
-        updateSelectInput(session = session, inputId = "colour",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")])
-        updateSelectInput(session = session, inputId = "facet",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")])
+        updateSelectInput(session = session, inputId = "colour",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")],
+                          selected = "none")
+        updateSelectInput(session = session, inputId = "facet",choices = colnames(data())[!sapply(data(),class)%in%c("numeric","integer")],
+                          selected = "none")
         
     })
-    
     
     observeEvent(input$x,{
         if(input$x!="none"){
@@ -117,8 +144,6 @@ server<-function(input, output,session){
             HTML("<b>Please do not choose the same variable for more than one option</b>")
         }
     })
-    
-    
     
     output$plot <- renderPlot({
         
@@ -150,7 +175,8 @@ server<-function(input, output,session){
                       panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
                       panel.grid.minor = element_line(colour = "gray100"),
                       strip.background = element_rect(fill = "white",
-                                                      colour = "darksalmon"))
+                                                      colour = "darksalmon"),
+                      plot.background = element_rect(colour = "black"))
             
         }else if(input$facet == "none"){
             
@@ -164,7 +190,8 @@ server<-function(input, output,session){
                       panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
                       panel.grid.minor = element_line(colour = "gray100"),
                       strip.background = element_rect(fill = "white",
-                                                      colour = "darksalmon"))
+                                                      colour = "darksalmon"),
+                      plot.background = element_rect(colour = "black"))
             
         }else if(input$colour == "none"){
             
@@ -179,7 +206,8 @@ server<-function(input, output,session){
                       panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
                       panel.grid.minor = element_line(colour = "gray100"),
                       strip.background = element_rect(fill = "white",
-                                                      colour = "darksalmon"))
+                                                      colour = "darksalmon"),
+                      plot.background = element_rect(colour = "black"))
             
         }else{
             
@@ -194,7 +222,8 @@ server<-function(input, output,session){
                       panel.grid.major = element_line(linetype = "solid", size = 0.25, colour = "gray80"),
                       panel.grid.minor = element_line(colour = "gray100"),
                       strip.background = element_rect(fill = "white",
-                                                      colour = "darksalmon")
+                                                      colour = "darksalmon"),
+                      plot.background = element_rect(colour = "black")
                 )
         }
     })
