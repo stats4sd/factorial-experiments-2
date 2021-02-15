@@ -1,7 +1,6 @@
 library(shiny)
 library(agridat)
 library(tidyverse)
-library(sortable)
 library(DT)
 library(shinyjqui)
 
