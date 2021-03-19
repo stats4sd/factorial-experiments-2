@@ -20,7 +20,7 @@ data2$Farmer <- as.factor(data2$Farmer)
 data2$Inputs <- as.factor(data2$Inputs)
 data2 <- select(data2, - ranef)
 
-Oudatasets <- list(
+datasets <- list(
     `Study 1: Barley yield` = data1,
     `Study 2: Example data (yield)` = data2,
     `Study 3: Seed germination` = data3,
@@ -73,9 +73,7 @@ ui <- fluidPage(
         ),
         mainPanel(
             tabsetPanel(
-                tabPanel("Instructions",
-                htmlOutput("instructions")),
-                tabPanel("App",
+                tabPanel("Factorial Experiments Graph App",
                     span(htmlOutput("error_message"),style = "color:red"),
                   actionButton("show_des", "See data description"),
                   hidden(
@@ -94,7 +92,10 @@ ui <- fluidPage(
                           )
                       ),
                   plotOutput("plot",height = "600px")
-                )
+                ),
+                
+                tabPanel("Instructions",
+                         htmlOutput("instructions"))
         )
     )
 )
